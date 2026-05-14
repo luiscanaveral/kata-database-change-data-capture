@@ -13,8 +13,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger('cdc-sink')
 
-KAFKA_SERVERS = os.environ.get('KAFKA_BOOTSTRAP_SERVERS', 'kafka:9092')
-AZURITE_CONN_STR = os.environ.get('AZURITE_CONNECTION_STRING')
+KAFKA_SERVERS = os.environ.get('KAFKA_BOOTSTRAP_SERVERS', 'localhost:29092')
+AZURITE_CONN_STR = os.environ.get(
+    'AZURITE_CONNECTION_STRING',
+    'DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://localhost:10000/devstoreaccount1;',
+)
 CONTAINER_NAME = os.environ.get('BLOB_CONTAINER', 'cdc-events')
 
 OP_MAP = {'c': 'create', 'u': 'update', 'd': 'delete', 'r': 'snapshot'}
