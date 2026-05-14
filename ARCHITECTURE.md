@@ -6,7 +6,7 @@
 graph TB
     subgraph "Data Sources"
         SIM[Simulator<br/>Python Script]
-        PG[(PostgreSQL<br/>ticketdb)]
+        PG[(PostgreSQL<br/>ticketdb<br/>:5432)]
     end
 
     subgraph "CDC Pipeline"
@@ -17,6 +17,11 @@ graph TB
 
     subgraph "Storage"
         AZ[Azurite<br/>Blob Storage<br/>cdc-events container]
+    end
+
+    subgraph "Verification"
+        TGT[(PostgreSQL Target<br/>ticketdb<br/>:5433)]
+        AL[Alembic<br/>Schema Sync]
     end
 
     subgraph "Monitoring"
@@ -30,6 +35,12 @@ graph TB
     SINK -->|JSON blobs| AZ
     ZK --> K
     UI --> K
+
+    AZ -->|task restore| RESTORE[Restore Script]
+    RESTORE -->|replay events| TGT
+
+    PG -.->|task db-revision| AL
+    AL -.->|autogenerate migration| TGT
 ```
 
 ## Data Flow
@@ -49,6 +60,75 @@ sequenceDiagram
     K->>Sink: consumes from topic
     Sink->>Az: uploads JSON blob<br/>path: <table>/<op>/<date>/<id>.json
 ```
+
+## Restore & Verification Flow
+
+```mermaid
+sequenceDiagram
+    participant Az as Azurite
+    participant AL as Alembic
+    participant TGT as Target DB (:5433)
+    participant SRC as Source DB (:5432)
+    participant D as Diff Script
+
+    Note over AL: Detect schema drift
+    AL->>SRC: reflect schema
+    AL->>TGT: compare with current state
+    AL->>TGT: apply migration if needed
+
+    Note over Az,TGT: Replay CDC events
+    Az->>TGT: sorted by creation time
+    TGT-->>TGT: INSERT (c/r), UPDATE (u), DELETE (d)
+
+    Note over D: Verify consistency
+    D->>SRC: query all rows
+    D->>TGT: query all rows
+    D-->>D: compare row-by-row
+    D->>D: report diffs (missing, extra, changed)
+```
+
+## Restore Logic
+
+The restore script (`src/restore.py`) processes CDC blobs in FK-safe order:
+
+```mermaid
+flowchart LR
+    A[Read all blobs<br/>from Azurite] --> B[Sort by<br/>creation time]
+    B --> C[Group by table]
+    C --> D[Process in<br/>dependency order]
+    D --> E1[venues]
+    D --> E2[artists]
+    D --> E3[customers]
+    D --> E4[events]
+    D --> E5[sections]
+    D --> E6[event_artists]
+    D --> E7[orders]
+    D --> E8[order_items]
+    E1 --> F{op type?}
+    E2 --> F
+    E3 --> F
+    E4 --> F
+    E5 --> F
+    E6 --> F
+    E7 --> F
+    E8 --> F
+    F -->|c / r| G[INSERT]
+    F -->|u| H[UPDATE by id]
+    F -->|d| I[DELETE by id]
+```
+
+## Alembic Schema Sync
+
+```mermaid
+flowchart LR
+    SRCDB[(Source DB<br/>:5432)] -->|sqlachemy reflect| REF[Reflected Metadata]
+    REF --> AUTO{Alembic<br/>autogenerate}
+    TGTDB[(Target DB<br/>:5433)] --> AUTO
+    AUTO -->|detects differences| MIG[Migration Script<br/>alembic/versions/]
+    MIG -->|alembic upgrade head| TGTDB
+```
+
+Alembic compares the current schema of the source database (reflected into `target_metadata`) against the target database's actual schema. Any drift — new tables, columns, constraints, or type changes — is captured in an auto-generated migration script.
 
 ## Database Schema
 
@@ -141,13 +221,14 @@ erDiagram
 
 ## Services
 
-| Service      | Image                        | Port(s)        | Purpose                                |
-|-------------|------------------------------|----------------|----------------------------------------|
-| Zookeeper   | confluentinc/cp-zookeeper    | 2181           | Kafka coordination                     |
-| Kafka       | confluentinc/cp-kafka        | 9092, 29092    | Message broker for CDC events          |
-| PostgreSQL  | debezium/postgres            | 5432           | Source database with WAL-level CDC     |
-| Debezium    | debezium/connect             | 8083           | CDC connector runtime                  |
-| Azurite     | mcr.microsoft.com/azure-storage/azurite | 10000-10002 | Local Azure Blob Storage emulator |
-| Kafka UI    | provectuslabs/kafka-ui       | 8080           | Kafka topic browser                    |
-| Sink        | custom (Python)              | —              | Consumes CDC events, writes to Azurite |
-| Simulator   | custom (Python)              | —              | Generates random ticket data           |
+| Service        | Image                                      | Port(s)           | Purpose                                 |
+|----------------|--------------------------------------------|-------------------|-----------------------------------------|
+| Zookeeper      | confluentinc/cp-zookeeper                  | 2181              | Kafka coordination                      |
+| Kafka          | confluentinc/cp-kafka                      | 9092, 29092       | Message broker for CDC events           |
+| PostgreSQL     | debezium/postgres                          | 5432              | Source database with WAL-level CDC      |
+| PostgreSQL     | postgres                                   | 5433              | Target database for verification        |
+| Debezium       | debezium/connect                           | 8083              | CDC connector runtime                   |
+| Azurite        | mcr.microsoft.com/azure-storage/azurite    | 10000-10002       | Local Azure Blob Storage emulator       |
+| Kafka UI       | provectuslabs/kafka-ui                     | 8080              | Kafka topic browser                     |
+| Sink           | custom (Python)                            | —                 | Consumes CDC events, writes to Azurite  |
+| Simulator      | custom (Python)                            | —                 | Generates random ticket data            |
