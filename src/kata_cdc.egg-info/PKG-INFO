@@ -1,0 +1,8 @@
+Metadata-Version: 2.4
+Name: kata-cdc
+Version: 0.1.0
+Summary: CDC (Change Data Capture) kata with Debezium, Kafka, and PostgreSQL
+Requires-Python: >=3.11
+Requires-Dist: kafka-python==2.0.2
+Requires-Dist: azure-storage-blob==12.19.0
+Requires-Dist: psycopg2-binary==2.9.9

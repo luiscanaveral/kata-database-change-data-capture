@@ -1,0 +1,12 @@
+README.md
+pyproject.toml
+src/db/__init__.py
+src/kata_cdc.egg-info/PKG-INFO
+src/kata_cdc.egg-info/SOURCES.txt
+src/kata_cdc.egg-info/dependency_links.txt
+src/kata_cdc.egg-info/requires.txt
+src/kata_cdc.egg-info/top_level.txt
+src/simulator/__init__.py
+src/simulator/simulate.py
+src/sink/__init__.py
+src/sink/consumer.py

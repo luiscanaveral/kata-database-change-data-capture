@@ -8,3 +8,85 @@ tasks:
       - .venv/bin/pip install --upgrade pip
     status:
       - test -d .venv
+
+  deps:
+    desc: Install project dependencies in the virtual environment
+    cmds:
+      - .venv/bin/pip install -e .
+    deps:
+      - venv
+
+  default:
+    desc: Start everything — Docker, connector, simulator, and sink
+    cmds:
+      - task: up
+
+  docker-up:
+    desc: Build and start all Docker services
+    cmds:
+      - docker compose up -d --build
+
+  docker-down:
+    desc: Stop all Docker services
+    cmds:
+      - docker compose down
+
+  docker-down-v:
+    desc: Stop all Docker services and remove volumes
+    cmds:
+      - docker compose down -v
+
+  docker-reset:
+    desc: Stop, wipe volumes, then rebuild and start
+    cmds:
+      - docker compose down -v
+      - docker compose up -d --build
+
+  up:
+    desc: Full startup — Docker services, connector registration, simulator and sink
+    cmds:
+      - docker compose up -d --build
+      - |
+        echo "Waiting for Kafka Connect..."
+        until curl -s -o /dev/null -w "%{http_code}" http://localhost:8083/connectors | grep -q "200"; do
+          printf '.'
+          sleep 2
+        done
+        echo " OK"
+      - bash scripts/register-postgres-connector.sh
+      - task: deps
+      - |
+        echo "Starting sink and simulator..."
+        .venv/bin/python src/sink/consumer.py &
+        .venv/bin/python src/simulator/simulate.py &
+        wait
+
+  db:
+    desc: Autogenerate SQLAlchemy ORM models from the running database
+    cmds:
+      - mkdir -p src/db
+      - .venv/bin/pip install sqlacodegen sqlalchemy
+      - .venv/bin/sqlacodegen postgresql://postgres:postgres@localhost:5432/ticketdb --outfile src/db/models.py
+    deps:
+      - venv
+
+  simulator:
+    desc: Run the data simulator locally (requires docker services up)
+    cmds:
+      - .venv/bin/python src/simulator/simulate.py
+    deps:
+      - deps
+
+  sink:
+    desc: Run the CDC sink consumer locally (requires docker services up)
+    cmds:
+      - .venv/bin/python src/sink/consumer.py
+    deps:
+      - deps
+
+  azurite:
+    desc: List CDC blobs stored in Azurite
+    cmds:
+      - .venv/bin/python src/list_azurite.py
+    deps:
+      - deps

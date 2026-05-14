@@ -18,7 +18,7 @@ CONNECTOR_CONFIG='{
     "database.user": "postgres",
     "database.password": "postgres",
     "database.dbname": "ticketdb",
-    "database.server.name": "ticketdb",
+    "topic.prefix": "ticketdb",
     "table.include.list": "public.venues,public.artists,public.events,public.event_artists,public.sections,public.customers,public.orders,public.order_items",
     "plugin.name": "pgoutput",
     "publication.autocreate.mode": "all_tables",

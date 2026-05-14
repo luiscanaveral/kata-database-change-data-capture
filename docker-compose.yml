@@ -1,6 +1,6 @@
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:7.6.0
     container_name: cdc-zookeeper
     ports:
       - "2181:2181"
@@ -9,7 +9,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
 
   kafka:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.6.0
     container_name: cdc-kafka
     ports:
       - "9092:9092"
@@ -25,7 +25,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
   postgres:
-    image: debezium/postgres:latest
+    image: debezium/postgres:16
     container_name: cdc-postgres
     ports:
       - "5432:5432"
@@ -42,7 +42,7 @@ services:
       retries: 10
 
   connect:
-    image: debezium/connect:latest
+    image: debezium/connect:2.7.3.Final
     container_name: cdc-connect
     ports:
       - "8083:8083"
@@ -63,7 +63,7 @@ services:
       VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
 
   azurite:
-    image: mcr.microsoft.com/azure-storage/azurite:latest
+    image: mcr.microsoft.com/azure-storage/azurite:3.30.0
     container_name: cdc-azurite
     ports:
       - "10000:10000"
