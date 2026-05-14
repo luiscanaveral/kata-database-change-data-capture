@@ -11,10 +11,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger('cdc-simulator')
 
-DB_HOST = os.environ.get('POSTGRES_HOST', 'localhost')
-DB_NAME = os.environ.get('POSTGRES_DB', 'ticketdb')
-DB_USER = os.environ.get('POSTGRES_USER', 'postgres')
-DB_PASS = os.environ.get('POSTGRES_PASSWORD', 'postgres')
+DB_HOST = os.environ['POSTGRES_HOST']
+DB_NAME = os.environ['POSTGRES_DB']
+DB_USER = os.environ['POSTGRES_USER']
+DB_PASS = os.environ['POSTGRES_PASSWORD']
 
 VENUE_NAMES = [
     'The Forum', 'Wembley Stadium', 'Red Rocks Amphitheatre', 'Sydney Opera House',

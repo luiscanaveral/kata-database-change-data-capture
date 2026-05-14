@@ -5,10 +5,7 @@ from rich.tree import Tree
 from rich.table import Table
 from rich import print as rprint
 
-CONN_STR = os.environ.get(
-    "AZURITE_CONNECTION_STRING",
-    "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://localhost:10000/devstoreaccount1;",
-)
+CONN_STR = os.environ["AZURITE_CONNECTION_STRING"]
 CONTAINER = os.environ.get("BLOB_CONTAINER", "cdc-events")
 
 

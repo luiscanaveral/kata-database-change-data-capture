@@ -11,16 +11,13 @@ from rich.progress import Progress
 
 logging.basicConfig(level=logging.WARNING)
 
-TARGET_HOST = os.environ.get("TARGET_PG_HOST", "localhost")
-TARGET_PORT = int(os.environ.get("TARGET_PG_PORT", "5433"))
-TARGET_DB = os.environ.get("TARGET_PG_DB", "ticketdb")
-TARGET_USER = os.environ.get("TARGET_PG_USER", "postgres")
-TARGET_PASS = os.environ.get("TARGET_PG_PASS", "postgres")
+TARGET_HOST = os.environ["TGT_PG_HOST"]
+TARGET_PORT = int(os.environ["TGT_PG_PORT"])
+TARGET_DB = os.environ["TGT_PG_DB"]
+TARGET_USER = os.environ["TGT_PG_USER"]
+TARGET_PASS = os.environ["TGT_PG_PASS"]
 
-AZURITE_CONN_STR = os.environ.get(
-    "AZURITE_CONNECTION_STRING",
-    "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://localhost:10000/devstoreaccount1;",
-)
+AZURITE_CONN_STR = os.environ["AZURITE_CONNECTION_STRING"]
 CONTAINER_NAME = os.environ.get("BLOB_CONTAINER", "cdc-events")
 
 TABLE_ORDER = [

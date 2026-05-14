@@ -5,17 +5,17 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 
-SRC_HOST = os.environ.get("SRC_PG_HOST", "localhost")
-SRC_PORT = int(os.environ.get("SRC_PG_PORT", "5432"))
-SRC_DB = os.environ.get("SRC_PG_DB", "ticketdb")
-SRC_USER = os.environ.get("SRC_PG_USER", "postgres")
-SRC_PASS = os.environ.get("SRC_PG_PASS", "postgres")
+SRC_HOST = os.environ["SRC_PG_HOST"]
+SRC_PORT = int(os.environ["SRC_PG_PORT"])
+SRC_DB = os.environ["SRC_PG_DB"]
+SRC_USER = os.environ["SRC_PG_USER"]
+SRC_PASS = os.environ["SRC_PG_PASS"]
 
-TGT_HOST = os.environ.get("TGT_PG_HOST", "localhost")
-TGT_PORT = int(os.environ.get("TGT_PG_PORT", "5433"))
-TGT_DB = os.environ.get("TGT_PG_DB", "ticketdb")
-TGT_USER = os.environ.get("TGT_PG_USER", "postgres")
-TGT_PASS = os.environ.get("TGT_PG_PASS", "postgres")
+TGT_HOST = os.environ["TGT_PG_HOST"]
+TGT_PORT = int(os.environ["TGT_PG_PORT"])
+TGT_DB = os.environ["TGT_PG_DB"]
+TGT_USER = os.environ["TGT_PG_USER"]
+TGT_PASS = os.environ["TGT_PG_PASS"]
 
 TABLES = [
     "venues",

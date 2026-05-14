@@ -1,3 +1,4 @@
+import os
 from logging.config import fileConfig
 
 from sqlalchemy import MetaData, create_engine, engine_from_config, pool
@@ -9,7 +10,7 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-SOURCE_URL = "postgresql://postgres:postgres@localhost:5432/ticketdb"
+SOURCE_URL = os.environ["ALEMBIC_SOURCE_URL"]
 
 
 def reflect_source() -> MetaData:
@@ -21,6 +22,7 @@ def reflect_source() -> MetaData:
 
 
 target_metadata = reflect_source()
+config.set_main_option("sqlalchemy.url", os.environ["ALEMBIC_TARGET_URL"])
 
 
 def include_object(obj, name, type_, reflected, compare_to):
