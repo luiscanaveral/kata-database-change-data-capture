@@ -61,14 +61,27 @@ tasks:
         .venv/bin/python src/simulator/simulate.py &
         wait
 
-  db:
-    desc: Autogenerate SQLAlchemy ORM models from the running database
+  db-revision:
+    desc: Autogenerate an Alembic migration by comparing source DB to target
     cmds:
-      - mkdir -p src/db
-      - .venv/bin/pip install sqlacodegen sqlalchemy
-      - .venv/bin/sqlacodegen postgresql://postgres:postgres@localhost:5432/ticketdb --outfile src/db/models.py
+      - .venv/bin/alembic revision --autogenerate -m "schema sync"
     deps:
-      - venv
+      - deps
+
+  db-upgrade:
+    desc: Apply pending Alembic migrations to the target database
+    cmds:
+      - .venv/bin/alembic upgrade head
+    deps:
+      - deps
+
+  db-migrate:
+    desc: Detect schema changes, generate migration, and apply to target
+    cmds:
+      - .venv/bin/alembic revision --autogenerate -m "schema sync"
+      - .venv/bin/alembic upgrade head
+    deps:
+      - deps
 
   simulator:
     desc: Run the data simulator locally (requires docker services up)
@@ -90,3 +103,25 @@ tasks:
       - .venv/bin/python src/list_azurite.py
     deps:
       - deps
+
+  restore:
+    desc: Apply migrations, then replay Azurite CDC events into target database
+    cmds:
+      - task: db-upgrade
+      - .venv/bin/python src/restore.py
+    deps:
+      - deps
+
+  diff:
+    desc: Compare source and target databases
+    cmds:
+      - .venv/bin/python src/diff.py
+    deps:
+      - deps
+
+  verify:
+    desc: Full verification — migrate, restore, then diff
+    cmds:
+      - task: db-migrate
+      - task: restore
+      - task: diff
